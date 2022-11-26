@@ -1,9 +1,9 @@
 import re
 import enum
 from copy import copy
- 
-#TODO: improve 2-way game parser, more classes + move rules
- 
+
+#TODO: move rules + pat
+
 class Chess(enum.Enum):
     PAWN = "p"
     ROOK = "r"
@@ -14,22 +14,17 @@ class Chess(enum.Enum):
     WHITE = True
     BLACK = False
     BOARD_WIDTH = 8
-    START_FEN = "1KkQq3/8/8/7P/8/8/8/8 w KQkq - 0 1"
     LEGAL_CHARS = "abcdefgh"
- 
+    START_FEN = "kKqQ4/8/8/8/8/8/6P1/5p2 w KQkq - 0 1"
+    
 """
 This is the abstract class for the pieces.
-The formula for the index is:
- x(numeral) + y(alphabetical) * width(of the board)
- We count each from 0.
- For example, a piece with the index of 20 is:
- 4(x) + 2(y, also know as c) * 8(width of board) = 20(index)
- it is also known as c4
- The reverse formula is:
- x = index - y * 8
- y = (index - x) / 8 
+Index is calculated with y * 8 plus x.
+Each piece is represented by the first letter
+of it's class which is capital or lower case according
+to the piece's color.
 """
- 
+
 class Piece():
     def __init__(self, index = None, piece_type = None, color = None):
         self.index = index
@@ -46,13 +41,142 @@ class Piece():
         if self.color == Chess.BLACK:
             str = str.upper() 
         return str
- 
+
+
+"""
+This is the class for a pawn.
+I made it inherently different from the other classes,
+as it can move only forward.
+I made it so it legal moves will be dependent on an attribute
+called 'direction'.
+The attribute is re-initalized during init according to
+the pawn's color(white('True') is 1 as he is advancing down the
+ board, and black('False') is -1 for the exact opposite reason).
+"""
+
+class Pawn(Piece):
+    def __init__(self, index, piece_type, color):
+        super().__init__(index, piece_type, color)
+        self.has_moved = False
+        if self.color.value == True:
+            self.direction = -1
+        else:
+            self.direction = 1
+
+
     def move(self, up_end_index):
-        self.possible_moves = [(0, 0)]
-        if up_end_index in self.possible_moves:
+        self.possible_moves = []
+
+        if self.has_moved == False\
+            and game.board[self.y * Chess.BOARD_WIDTH.value + 2 * self.direction * Chess.BOARD_WIDTH.value + self.x] == None:
+            self.possible_moves.append((self.y + 2 * self.direction, self.x))
+        
+        if game.board[self.y * Chess.BOARD_WIDTH.value + 1 * self.direction * Chess.BOARD_WIDTH.value + self.x] == None\
+            and outOfBounds(self.y + 1 * self.direction, self.x):
+            self.possible_moves.append((self.y + 1 * self.direction, self.x))
+        
+        if game.board[self.y * Chess.BOARD_WIDTH.value + 1 * self.direction * Chess.BOARD_WIDTH.value + self.x - 1] != None\
+            and game.board[self.y * Chess.BOARD_WIDTH.value + 1 * self.direction * Chess.BOARD_WIDTH.value + self.x - 1].color.value != self.color.value\
+            and outOfBounds(self.y + 1 * self.direction, self.x - 1):
+            self.possible_moves.append((self.y + 1 * self.direction, self.x - 1))
+
+        if game.board[self.y * Chess.BOARD_WIDTH.value + 1 * self.direction * Chess.BOARD_WIDTH.value + self.x + 1] != None\
+            and game.board[self.y * Chess.BOARD_WIDTH.value + 1 * self.direction * Chess.BOARD_WIDTH.value + self.x + 1].color.value != self.color.value\
+            and outOfBounds(self.y + 1 * self.direction, self.x + 1):
+            self.possible_moves.append((self.y + 1 * self.direction, self.x + 1))
+
+        if up_end_index in self.possible_moves and game.turn == self.color.value:
             game.board[up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]] = copy(self)
             game.board[self.index] = None
             self.index = up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]
+            self.has_moved = True
+
+            if self.color == Chess.BLACK:
+                game.movesMade[0] + 1
+            else:
+                game.movesMade[1] + 1
+ 
+            not game.turn
+ 
+            game.boardToFEN()
+ 
+            return True
+        else:
+            print("Illegal move! Please try again!")
+            return False
+
+
+class Rook(Piece):
+    pass
+
+
+class Bishop(Piece):
+    pass
+
+class Horse(Piece):
+    pass
+
+
+class Queen(Piece):
+    pass
+
+
+class King(Piece):
+    def __init__(self, index, piece_type, color):
+        super().__init__(index, piece_type, color)
+        self.has_moved = False
+    def move(self, up_end_index):
+        self.possible_moves = []
+
+        for y in range(-1,2):
+            for x in range(-1,2):
+                if x == 0 and y == 0:
+                    continue
+                if outOfBounds(y + self.y, x + self.x):
+                    if game.board[(y + self.y) * Chess.BOARD_WIDTH.value + (x + self.x)] == None:
+                        self.possible_moves.append(())
+                    elif game.board[(y + self.y) * Chess.BOARD_WIDTH.value + (x + self.x)].color.value != self.color.value:
+                        self.possible_moves.append(())
+        
+        match self.color.value:
+            case True:
+                if game.board[0] != None\
+                    and game.board[0].color.value == self.color.value\
+                    and game.board[0].has_moved == False\
+                    and game.board[1] == None\
+                    and game.board[2] == None\
+                    and game.board[3] == None\
+                    and self.has_moved == False:
+                    self.possible_moves.append((0, 0))
+                if game.board[7] != None\
+                    and game.board[7].color.value == self.color.value\
+                    and game.board[7].has_moved == False\
+                    and game.board[5] == None\
+                    and game.board[6] == None\
+                    and self.has_moved == False:
+                    self.possible_moves.append((0, 7))
+            case False:
+                if game.board[56] != None\
+                    and game.board[56].color.value == self.color.value\
+                    and game.board[56].has_moved == False\
+                    and game.board[57] == None\
+                    and game.board[58] == None\
+                    and game.board[59] == None\
+                    and self.has_moved == False:
+                    self.possible_moves.append((0, 0))
+                if game.board[63] != None\
+                    and game.board[63].color.value == self.color.value\
+                    and game.board[63].has_moved == False\
+                    and game.board[61] == None\
+                    and game.board[62] == None\
+                    and self.has_moved == False:
+                    self.possible_moves.append((7, 7))
+        
+        if up_end_index in self.possible_moves and game.turn == self.color.value:
+            game.board[up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]] = copy(self)
+            game.board[self.index] = None
+            self.index = up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]
+            self.has_moved = True
  
             if self.color == Chess.BLACK:
                 game.movesMade[0] + 1
@@ -67,40 +191,7 @@ class Piece():
         else:
             print("Illegal move! Please try again!")
             return False
-"""
-This is the class for a pawn.
-I made it inherently different from the other classes,
-as it can move only forward.
-I made it so it legal moves will be dependent on an attribute
-called 'direction'.
-The attribute is re-initalized during init according to
-the pawn's color(white('True') is 1 as he is advancing down the
- board, and black('False') is -1 for the exact opposite reason).
-"""
- 
-class Pawn(Piece):
-    pass
- 
- 
-class Rook(Piece):
-    pass
- 
- 
-class Bishop(Piece):
-    pass
- 
- 
-class Horse(Piece):
-    pass
- 
- 
-class Queen(Piece):
-    pass
- 
- 
-class King(Piece):
-    pass
- 
+
 """
 This is the abstract class for a game.
 The save creation is not perfect as it is,
@@ -114,7 +205,7 @@ For example:
 c4e5
 Which means c4 to e5.
 """
- 
+
 class Game():
     def __init__(self):
         self.history = [Chess.START_FEN.value]
@@ -122,7 +213,7 @@ class Game():
         self.board = self.FENToBoard()
         self.turn = True
         self.movesMade = [0, 1]
- 
+    
     def saveGame(self):
         c = 0
         while True:
@@ -133,23 +224,25 @@ class Game():
                 continue
             except:
                 save = open(f"save{c}.txt", "x")
-                for i in range(len(game)):
+                for i in range(len(self.history)):
                     save.write(f"{self.history[i]}\n")
                 save.close()
                 break
- 
- 
+        
+
     def loadGame(self, save, board_state):
         save_file = open(save, "r") 
         save_boards = save_file.readlines()
         self.FENstr = save_boards[board_state - 1]
         save_file.close()
         self.playGame()
- 
+
+
     def switchBoard(self, board):
         self.FENstr = self.history[board - 1]
         self.playGame()
- 
+
+
     def FENToBoard(self):
         game_board = []
         FEN = ""
@@ -161,52 +254,40 @@ class Game():
         counter = 0
         for i in range(len(FEN)):
             match self.FENstr[i]:
-                case "/":
-                    continue
                 case "p":
                     game_board.append(Pawn(counter, Chess.PAWN, Chess.WHITE))
-                    counter += 1
                 case "P":
                     game_board.append(Pawn(counter, Chess.PAWN, Chess.BLACK))
-                    counter += 1
                 case "r":
                     game_board.append(Rook(counter, Chess.ROOK, Chess.WHITE))
-                    counter += 1
                 case "R":
                     game_board.append(Rook(counter, Chess.ROOK, Chess.BLACK))
-                    counter += 1
                 case "b":
                     game_board.append(Bishop(counter, Chess.BISHOP, Chess.WHITE))
-                    counter += 1
                 case "B":
                     game_board.append(Bishop(counter, Chess.BISHOP, Chess.BLACK))
-                    counter += 1
                 case "h":
                     game_board.append(Horse(counter, Chess.HORSE, Chess.WHITE))
-                    counter += 1
                 case "H":
                     game_board.append(Horse(counter, Chess.HORSE, Chess.BLACK))
-                    counter += 1
                 case "q":
                     game_board.append(Queen(counter, Chess.QUEEN, Chess.WHITE))
-                    counter += 1
                 case "Q":
                     game_board.append(Queen(counter, Chess.QUEEN, Chess.BLACK))
-                    counter += 1
                 case "k":
                     game_board.append(King(counter, Chess.KING, Chess.WHITE))
-                    counter += 1
                 case "K":
                     game_board.append(King(counter, Chess.KING, Chess.BLACK))
-                    counter += 1
                 case _:
                     if self.FENstr[i].isnumeric():
                         for j in range(int(self.FENstr[i])):
                             game_board.append(None)
                             counter += 1
+                    counter -= 1
+            counter += 1
         return game_board
- 
- 
+        
+        
     def boardToFEN(self):
         FEN = ""
         counter = 0
@@ -252,12 +333,12 @@ class Game():
                     else:
                         FEN += "K"
             counter + 1
- 
+
         if self.turn == True:
             FEN += " w "
         else:
             FEN += " b "
- 
+
         for i in self.board:
             if type(i).__name__ == "King":
                 if i.color == Chess.BLACK:
@@ -270,10 +351,10 @@ class Game():
                 else:
                     FEN += "q"
         FEN += f" - {self.movesMade[0]} {self.movesMade[1]}"
- 
+
         self.history.append(FEN)
- 
- 
+
+
     def printBoard(self):
         game = "  1 2 3 4 5 6 7 8\n"
         for y in range(Chess.BOARD_WIDTH.value):
@@ -290,7 +371,8 @@ class Game():
                     else:
                         game += f"{self.board[x + y * Chess.BOARD_WIDTH.value]}" + "|"
         print(game)
- 
+
+
     def playGame(self):
         decision = input()
         while decision == "load":
@@ -329,7 +411,8 @@ class Game():
                 if re.fullmatch(r"^[a-h][1-8][a-h][1-8]", move):
                     up_start_index = (Chess.LEGAL_CHARS.value.find(move[0]), int(move[1]) - 1)
                     up_end_index = (Chess.LEGAL_CHARS.value.find(move[2]), int(move[3]) - 1)
-                    if self.board[up_start_index[0] * Chess.BOARD_WIDTH.value + up_start_index[1]].move(up_end_index):
+                    if up_end_index != up_start_index\
+                        and self.board[up_start_index[0] * Chess.BOARD_WIDTH.value + up_start_index[1]].move(up_end_index):
                         continue
                 else:
                     print("Illegal input! Try again!")
@@ -338,8 +421,15 @@ class Game():
         else:
             print("Unknown command! Please try again.")
             self.playGame()
- 
- 
+             
+
+def outOfBounds(y, x):
+    if y < 0 or y > 7\
+    or x < 0 or x > 7:
+        return False
+    else:
+        return True
+
+
 game = Game()
 game.playGame()
- 
