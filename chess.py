@@ -36,6 +36,7 @@ class Piece():
         self.has_moved = None
         self.possible_moves = []
  
+
     def __repr__(self) -> str:
         str = self.piece_type.value
         if self.color == Chess.BLACK:
@@ -53,6 +54,7 @@ The attribute is re-initalized during init according to
 the pawn's color(white('True') is 1 as he is advancing down the
  board, and black('False') is -1 for the exact opposite reason).
 """
+
 
 class Pawn(Piece):
     def __init__(self, index, piece_type, color):
@@ -107,18 +109,331 @@ class Pawn(Piece):
 
 
 class Rook(Piece):
-    pass
+    def __init__(self, index, piece_type, color):
+        super().__init__(index, piece_type, color)
+        self.has_moved = False
+
+
+    def move(self, up_end_index):
+        self.possible_moves = []
+
+        if self.has_moved == False:
+            match self.index:
+                case 0:
+                    self.possible_moves.append((0,2))
+                case 7:
+                    self.possible_moves.append((0,5))
+                case 56:
+                    self.possible_moves.append((7,2))
+                case 63:
+                    self.possible_moves.append((7,5))
+
+        free_l = True
+        free_r = True
+        free_u = True
+        free_d = True
+        i = 1
+        while free_l or free_r or free_u or free_d:
+            if outOfBounds(self.x - i) and free_l:
+                if game.board[self.index - i] == None:
+                    self.possible_moves.append((self.y, self.x - i))
+                else:
+                    if game.board[self.index - i].color.value != self.color.value:
+                        self.possible_moves.append((self.y, self.x - i))
+                        free_l = False
+                    else:
+                        free_l = False
+            else:
+                free_l = False
+
+            if outOfBounds(self.x + i) and free_r:
+                if game.board[self.index + i] == None:
+                    self.possible_moves.append((self.y, self.x + i))
+                else:
+                    if game.board[self.index + i].color.value != self.color.value:
+                        self.possible_moves.append((self.y, self.x + i))
+                        free_r = False
+                    else:
+                        free_r = False
+            else:
+                free_r = False
+
+            if outOfBounds(self.y - i) and free_u:
+                if game.board[self.index - i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y - i, self.x))
+                else:
+                    if game.board[self.index - i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y - i, self.x))
+                        free_u = False
+                    else:
+                        free_u = False
+            else:
+                free_u = False
+
+            if outOfBounds(self.y + i) and free_d:
+                if game.board[self.index + i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y + i, self.x))
+                else:
+                    if game.board[self.index + i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y + i, self.x))
+                        free_d = False
+                    else:
+                        free_d = False
+            else:
+                free_d = False
+
+            i += 1
+
+        if up_end_index in self.possible_moves and game.turn == self.color.value:
+            game.board[up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]] = copy(self)
+            game.board[self.index] = None
+            self.index = up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]
+            self.has_moved = True
+
+            if self.color == Chess.BLACK:
+                game.movesMade[0] + 1
+            else:
+                game.movesMade[1] + 1
+ 
+            not game.turn
+ 
+            game.boardToFEN()
+ 
+            return True
+        else:
+            print("Illegal move! Please try again!")
+            return False
 
 
 class Bishop(Piece):
-    pass
+    def __init__(self, index, piece_type, color):
+        super().__init__(index, piece_type, color)
+        self.has_moved = False
+
+
+    def move(self, up_end_index):
+        self.possible_moves = []
+
+        free_lu = True
+        free_ru = True
+        free_ld = True
+        free_rd = True
+        i = 1
+        while free_lu or free_ru or free_ld or free_rd:
+            if outOfBounds(self.x - i) and outOfBounds(self.y - i) and free_lu :
+                if game.board[self.index - i - i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y - i, self.x - i))
+                else:
+                    if game.board[self.index - i - i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y - i, self.x - i))
+                        free_lu = False
+                    else:
+                        free_lu = False
+            else:
+                free_lu = False
+
+            if outOfBounds(self.x + i) and outOfBounds(self.y - i) and free_ru:
+                if game.board[self.index + i - i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y - i, self.x + i))
+                else:
+                    if game.board[self.index + i - i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y - i, self.x + i))
+                        free_ru = False
+                    else:
+                        free_ru = False
+            else:
+                free_ru = False
+
+            if outOfBounds(self.x - i) and outOfBounds(self.y + i) and free_ld:
+                if game.board[self.index - i + i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y + i, self.x - i))
+                else:
+                    if game.board[self.index - i + i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y + i, self.x - i))
+                        free_ld = False
+                    else:
+                        free_ld = False
+            else:
+                free_ld = False
+
+            if outOfBounds(self.x + i) and outOfBounds(self.y + i) and free_rd:
+                if game.board[self.index + i + i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y + i, self.x + i))
+                else:
+                    if game.board[self.index + i + i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y + i, self.x + i))
+                        free_rd = False
+                    else:
+                        free_rd = False
+            else:
+                free_rd = False
+
+            i += 1
+
+        if up_end_index in self.possible_moves and game.turn == self.color.value:
+            game.board[up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]] = copy(self)
+            game.board[self.index] = None
+            self.index = up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]
+            self.has_moved = True
+
+            if self.color == Chess.BLACK:
+                game.movesMade[0] + 1
+            else:
+                game.movesMade[1] + 1
+ 
+            not game.turn
+ 
+            game.boardToFEN()
+ 
+            return True
+        else:
+            print("Illegal move! Please try again!")
+            return False
+
 
 class Horse(Piece):
     pass
 
 
 class Queen(Piece):
-    pass
+    def __init__(self, index, piece_type, color):
+        super().__init__(index, piece_type, color)
+
+
+    def move(self, up_end_index):
+        self.possible_moves = []
+
+        free_l = True
+        free_r = True
+        free_u = True
+        free_d = True
+        i = 1
+        while free_l or free_r or free_u or free_d:
+            if outOfBounds(self.x - i) and free_l:
+                if game.board[self.index - i] == None:
+                    self.possible_moves.append((self.y, self.x - i))
+                else:
+                    if game.board[self.index - i].color.value != self.color.value:
+                        self.possible_moves.append((self.y, self.x - i))
+                        free_l = False
+                    else:
+                        free_l = False
+            else:
+                free_l = False
+
+            if outOfBounds(self.x + i) and free_r:
+                if game.board[self.index + i] == None:
+                    self.possible_moves.append((self.y, self.x + i))
+                else:
+                    if game.board[self.index + i].color.value != self.color.value:
+                        self.possible_moves.append((self.y, self.x + i))
+                        free_r = False
+                    else:
+                        free_r = False
+            else:
+                free_r = False
+
+            if outOfBounds(self.y - i) and free_u:
+                if game.board[self.index - i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y - i, self.x))
+                else:
+                    if game.board[self.index - i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y - i, self.x))
+                        free_u = False
+                    else:
+                        free_u = False
+            else:
+                free_u = False
+
+            if outOfBounds(self.y + i) and free_d:
+                if game.board[self.index + i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y + i, self.x))
+                else:
+                    if game.board[self.index + i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y + i, self.x))
+                        free_d = False
+                    else:
+                        free_d = False
+            else:
+                free_d = False
+
+            i += 1
+
+        free_lu = True
+        free_ru = True
+        free_ld = True
+        free_rd = True
+        i = 1
+        while free_lu or free_ru or free_ld or free_rd:
+            if outOfBounds(self.x - i) and outOfBounds(self.y - i) and free_lu :
+                if game.board[self.index - i - i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y - i, self.x - i))
+                else:
+                    if game.board[self.index - i - i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y - i, self.x - i))
+                        free_lu = False
+                    else:
+                        free_lu = False
+            else:
+                free_lu = False
+
+            if outOfBounds(self.x + i) and outOfBounds(self.y - i) and free_ru:
+                if game.board[self.index + i - i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y - i, self.x + i))
+                else:
+                    if game.board[self.index + i - i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y - i, self.x + i))
+                        free_ru = False
+                    else:
+                        free_ru = False
+            else:
+                free_ru = False
+
+            if outOfBounds(self.x - i) and outOfBounds(self.y + i) and free_ld:
+                if game.board[self.index - i + i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y + i, self.x - i))
+                else:
+                    if game.board[self.index - i + i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y + i, self.x - i))
+                        free_ld = False
+                    else:
+                        free_ld = False
+            else:
+                free_ld = False
+
+            if outOfBounds(self.x + i) and outOfBounds(self.y + i) and free_rd:
+                if game.board[self.index + i + i * Chess.BOARD_WIDTH.value] == None:
+                    self.possible_moves.append((self.y + i, self.x + i))
+                else:
+                    if game.board[self.index + i + i * Chess.BOARD_WIDTH.value].color.value != self.color.value:
+                        self.possible_moves.append((self.y + i, self.x + i))
+                        free_rd = False
+                    else:
+                        free_rd = False
+            else:
+                free_rd = False
+
+            i += 1
+
+        if up_end_index in self.possible_moves and game.turn == self.color.value:
+            game.board[up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]] = copy(self)
+            game.board[self.index] = None
+            self.index = up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]
+            self.has_moved = True
+
+            if self.color == Chess.BLACK:
+                game.movesMade[0] + 1
+            else:
+                game.movesMade[1] + 1
+ 
+            not game.turn
+ 
+            game.boardToFEN()
+ 
+            return True
+        else:
+            print("Illegal move! Please try again!")
+            return False
 
 
 class King(Piece):
@@ -147,14 +462,14 @@ class King(Piece):
                     and game.board[2] == None\
                     and game.board[3] == None\
                     and self.has_moved == False:
-                    self.possible_moves.append((0, 0))
+                    self.possible_moves.append((0, 1))
                 if game.board[7] != None\
                     and game.board[7].color.value == self.color.value\
                     and game.board[7].has_moved == False\
                     and game.board[5] == None\
                     and game.board[6] == None\
                     and self.has_moved == False:
-                    self.possible_moves.append((0, 7))
+                    self.possible_moves.append((0, 6))
             case False:
                 if game.board[56] != None\
                     and game.board[56].color.value == self.color.value\
@@ -163,16 +478,25 @@ class King(Piece):
                     and game.board[58] == None\
                     and game.board[59] == None\
                     and self.has_moved == False:
-                    self.possible_moves.append((0, 0))
+                    self.possible_moves.append((7, 1))
                 if game.board[63] != None\
                     and game.board[63].color.value == self.color.value\
                     and game.board[63].has_moved == False\
                     and game.board[61] == None\
                     and game.board[62] == None\
                     and self.has_moved == False:
-                    self.possible_moves.append((7, 7))
+                    self.possible_moves.append((7, 6))
         
         if up_end_index in self.possible_moves and game.turn == self.color.value:
+            if up_end_index == (0, 1) and game.board[0] != None and game.board[0].color.value == self.color.value:
+                game.board[0].move((0,2))
+            if up_end_index == (0, 6) and game.board[7] != None and game.board[7].color.value == self.color.value:
+                game.board[0].move((0,5))
+            if up_end_index == (7, 1) and game.board[56] != None and game.board[56].color.value == self.color.value:
+                game.board[0].move((7,2))
+            if up_end_index == (7, 1) and game.board[56] != None and game.board[56].color.value == self.color.value:
+                game.board[0].move((7,5))
+
             game.board[up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]] = copy(self)
             game.board[self.index] = None
             self.index = up_end_index[0] * Chess.BOARD_WIDTH.value + up_end_index[1]
@@ -192,6 +516,7 @@ class King(Piece):
             print("Illegal move! Please try again!")
             return False
 
+
 """
 This is the abstract class for a game.
 The save creation is not perfect as it is,
@@ -206,6 +531,7 @@ c4e5
 Which means c4 to e5.
 """
 
+
 class Game():
     def __init__(self):
         self.history = [Chess.START_FEN.value]
@@ -214,6 +540,7 @@ class Game():
         self.turn = True
         self.movesMade = [0, 1]
     
+
     def saveGame(self):
         c = 0
         while True:
@@ -374,53 +701,74 @@ class Game():
 
 
     def playGame(self):
-        decision = input()
-        while decision == "load":
-            print("Please enter game location:")
-            loaded_save = input()
-            if loaded_save == "quit":
-                self.playGame()
-            if ":" not in loaded_save:
-                print("Illegal location! Please try again.")
+        while True:
+            decision = input()
+            if decision == "load":
+                print("Please enter game location:")
+                loaded_save = input()
+                if loaded_save == "quit":
+                    self.playGame()
+                if ":" not in loaded_save:
+                    print("Illegal location! Please try again.")
+                    self.playGame()
+                else:
+                    print("Loading game:")
+                    self.loadGame(loaded_save)
+            if decision == "quit":
+                print("Do you really want to quit?(y/n)")
+                cont_or_not = input()
+                if cont_or_not == "y":
+                    print("Save game? y/n")
+                    save_or_not = input()
+                    if save_or_not == "y":
+                        print("Saving game.")
+                        self.saveGame()
+                    if save_or_not == "n":
+                        print("Quitting.")
+                        break
+                if cont_or_not == "n":
+                    print("Returning to menu.")
+                    continue
+            if decision == "play":
+                print("Starting a new game.")
+                while True:
+                    if "k" not in self.FENstr:
+                        print("White king is dead! long live the black king!")
+                        break
+                    if "k" not in self.FENstr:
+                        print("White king is dead! long live the black king!")
+                        break
+                    self.printBoard()
+                    move = input()
+                    if move == "quit":
+                        print("Do you really want to quit?(y/n)")
+                        cont_or_not = input()
+                        if cont_or_not == "y":
+                            print("Save game? y/n")
+                            save_or_not = input()
+                            if save_or_not == "y":
+                                print("Saving game.")
+                                self.saveGame()
+                            if save_or_not == "n":
+                                print("Quitting.")
+                                break
+                        if cont_or_not == "n":
+                            print("Returning to menu.")
+                            break
+                    if re.fullmatch(r"^[a-h][1-8][a-h][1-8]", move):
+                        up_start_index = (Chess.LEGAL_CHARS.value.find(move[0]), int(move[1]) - 1)
+                        up_end_index = (Chess.LEGAL_CHARS.value.find(move[2]), int(move[3]) - 1)
+                        if up_end_index != up_start_index\
+                            and self.board[up_start_index[0] * Chess.BOARD_WIDTH.value + up_start_index[1]].move(up_end_index):
+                            continue
+                    else:
+                        print("Illegal input! Try again!")
+                        continue
+                    break
                 continue
             else:
-                print("Loading game:")
-                self.loadGame(loaded_save)
-        while decision == "quit":
-            print("Save game? y/n")
-            save_or_not = input()
-            if save_or_not == "y":
-                print("Saving game.")
-                self.saveGame()
-            if save_or_not == "n":
-                print("Quitting.")
-            return None
-        while decision == "play":
-            print("Starting a new game.")
-            while True:
-                if "k" not in self.FENstr:
-                    print("White king is dead! long live the black king!")
-                    break
-                if "k" not in self.FENstr:
-                    print("White king is dead! long live the black king!")
-                    break
-                self.printBoard()
-                move = input()
-                if move == "quit":
-                    break
-                if re.fullmatch(r"^[a-h][1-8][a-h][1-8]", move):
-                    up_start_index = (Chess.LEGAL_CHARS.value.find(move[0]), int(move[1]) - 1)
-                    up_end_index = (Chess.LEGAL_CHARS.value.find(move[2]), int(move[3]) - 1)
-                    if up_end_index != up_start_index\
-                        and self.board[up_start_index[0] * Chess.BOARD_WIDTH.value + up_start_index[1]].move(up_end_index):
-                        continue
-                else:
-                    print("Illegal input! Try again!")
-                    continue
-                break
-        else:
-            print("Unknown command! Please try again.")
-            self.playGame()
+                print("Unknown command! Please try again.")
+                self.playGame()
              
 
 def outOfBounds(y, x):
