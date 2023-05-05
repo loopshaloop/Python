@@ -218,7 +218,7 @@ class Piece():
             i += 1
  
  
-    def horse_move(self, up_end_index):
+    def horse_move(self):
         if outOfBounds(self.y + 1, self.x - 2):
             if game.board[(self.x - 2) + (self.y + 1) * Chess.BOARD_WIDTH.value] == None:
                 self.possible_moves.append((self.y + 1, self.x - 2))
@@ -261,7 +261,7 @@ class Piece():
                 self.possible_moves.append((self.y - 2, self.x + 1))
  
     
-    def king_move(self, up_end_index):
+    def king_move(self):
         for y in range(-1,2):
             for x in range(-1,2):
                 if x == 0 and y == 0:
@@ -305,16 +305,6 @@ class Piece():
                     and game.board[62] == None\
                     and self.has_moved == False:
                     self.possible_moves.append((7, 6))
-        
-        if up_end_index in self.possible_moves and game.turn == self.color.value:
-            if up_end_index == (0, 1) and game.board[0] != None and game.board[0].color.value == self.color.value:
-                game.board[0].move((0,2))
-            if up_end_index == (0, 6) and game.board[7] != None and game.board[7].color.value == self.color.value:
-                game.board[0].move((0,5))
-            if up_end_index == (7, 1) and game.board[56] != None and game.board[56].color.value == self.color.value:
-                game.board[0].move((7,2))
-            if up_end_index == (7, 1) and game.board[56] != None and game.board[56].color.value == self.color.value:
-                game.board[0].move((7,5))
  
  
     def move_finalize(self, up_end_index):
