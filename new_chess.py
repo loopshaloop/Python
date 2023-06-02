@@ -1,4 +1,5 @@
 import re
+import string
 import enum
 from copy import deepcopy
 import os
@@ -19,10 +20,10 @@ class Chess(enum.Enum):
     QUEEN = 4
     KING = 5
     WHITE = True
-    BLACK = False
+    BLACK = -1
     BOARD_WIDTH = 8
     LEGAL_CHARS = "abcdefgh"
-    START_FEN = "RHBQKBHR/PPPPPPPP/8/8/8/8/pppppppp/rhbqkbhr w KQkq - 0 1"
+    START_FEN = "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1"
 
 
 #The main function that starts the game loop.
@@ -51,9 +52,9 @@ def menu():
             clear()
             print("This is a tutorial for this private version of chess!")
             print("")
-            print("To start playing, type \'play\'!\nTo quit, type \'quit\'!\nTo go back to the menu, enter \'menu\'!")
+            print("To start playing, type \'play\'!\nTo quit, type \'quit\'!\nTo go back to the Menu, enter \'Menu\'!")
             choice = input()
-            if choice == "menu":
+            if choice == "Menu":
                 return 1
         case _:
             print("Sorry, this is an unknown command!\n Please try again!")
